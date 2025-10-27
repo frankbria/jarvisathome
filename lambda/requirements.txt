@@ -1,0 +1,2 @@
+# Lambda function dependencies
+requests==2.31.0

@@ -1,0 +1,40 @@
+{
+  "interactionModel": {
+    "languageModel": {
+      "invocationName": "jarvis",
+      "intents": [
+        {
+          "name": "AskQuestionIntent",
+          "slots": [
+            {
+              "name": "Question",
+              "type": "AMAZON.SearchQuery"
+            }
+          ],
+          "samples": [
+            "ask {Question}",
+            "tell me about {Question}",
+            "explain {Question}",
+            "what is {Question}",
+            "who is {Question}",
+            "how does {Question} work",
+            "{Question}"
+          ]
+        },
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.HelpIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.StopIntent",
+          "samples": []
+        }
+      ],
+      "types": []
+    }
+  }
+}
