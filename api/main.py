@@ -8,6 +8,7 @@ from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any, Literal
+from contextlib import asynccontextmanager
 import uuid
 import asyncio
 from datetime import datetime, timedelta
@@ -20,10 +21,22 @@ from .job_manager import JobManager
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Manage application lifecycle (startup and shutdown)"""
+    # Startup
+    logger.info("Alexa LLM Bridge API starting up")
+    yield
+    # Shutdown
+    logger.info("Alexa LLM Bridge API shutting down")
+
+
 app = FastAPI(
     title="Alexa LLM Bridge API",
     description="Async middleware for connecting Alexa Skills to LLM APIs",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 # Enable CORS for development
@@ -89,6 +102,17 @@ class StatusResponse(BaseModel):
 @app.get("/")
 async def root():
     """Health check endpoint"""
+    return {
+        "service": "Alexa LLM Bridge API",
+        "status": "healthy",
+        "version": "1.0.0",
+        "active_jobs": job_manager.get_active_job_count()
+    }
+
+
+@app.get("/health")
+async def health():
+    """Health check endpoint (alias for /)"""
     return {
         "service": "Alexa LLM Bridge API",
         "status": "healthy",
@@ -291,17 +315,3 @@ async def process_llm_job(
             "error": str(e),
             "completed_at": datetime.utcnow().isoformat()
         })
-
-
-# Startup event to initialize cleanup task
-@app.on_event("startup")
-async def startup_event():
-    """Initialize background tasks on startup"""
-    logger.info("Alexa LLM Bridge API starting up")
-    # Could add a periodic cleanup task here if desired
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Cleanup on shutdown"""
-    logger.info("Alexa LLM Bridge API shutting down")

@@ -194,17 +194,15 @@ def test_job_manager_cleanup(job_manager):
 
 def test_invalid_provider(client):
     """Test creating job with invalid provider"""
-    with patch('api.main.llm_client.generate', new_callable=AsyncMock) as mock_generate:
-        mock_generate.side_effect = ValueError("Unknown provider: invalid")
+    # Invalid provider should fail at validation level (422)
+    response = client.post("/ask", json={
+        "question": "Test question",
+        "session_id": "test-session",
+        "provider": "invalid"
+    })
 
-        response = client.post("/ask", json={
-            "question": "Test question",
-            "session_id": "test-session",
-            "provider": "invalid"
-        })
-
-        # Job is created but will fail during processing
-        assert response.status_code == 200
+    # Should fail validation before job creation
+    assert response.status_code == 422
 
 
 def test_openai_provider(client):
