@@ -142,7 +142,7 @@ Group=jarvis
 WorkingDirectory=/home/jarvis/jarvisathome
 Environment="PATH=/home/jarvis/jarvisathome/venv/bin"
 EnvironmentFile=/home/jarvis/jarvisathome/.env
-ExecStart=/home/jarvis/jarvisathome/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000 --workers 1
+ExecStart=/home/jarvis/jarvisathome/venv/bin/uvicorn api.main:app --host 0.0.0.0 --port 8000 --workers 1
 Restart=always
 RestartSec=10
 
@@ -622,7 +622,7 @@ For higher concurrency:
 sudo nano /etc/systemd/system/jarvis-api.service
 
 # Change ExecStart line to:
-ExecStart=/home/jarvis/jarvisathome/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000 --workers 2
+ExecStart=/home/jarvis/jarvisathome/venv/bin/uvicorn api.main:app --host 0.0.0.0 --port 8000 --workers 2
 
 # Restart
 sudo systemctl daemon-reload

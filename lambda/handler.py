@@ -93,13 +93,31 @@ def handle_intent(event: Dict[str, Any]) -> Dict[str, Any]:
     elif intent_name == 'AMAZON.HelpIntent':
         return handle_help()
 
-    # Handle custom question intent
+    # If we have an active job, check its status (polling)
+    # This handles the case where Alexa re-prompts or user says something during wait
+    elif 'job_id' in session:
+        # If it's a new question intent, handle as new question
+        # Otherwise, treat as polling request
+        if intent_name == 'AskQuestionIntent':
+            # Cancel old job and start new one
+            old_job_id = session.get('job_id')
+            if old_job_id:
+                try:
+                    requests.delete(
+                        f"{API_BASE_URL}/job/{old_job_id}",
+                        timeout=API_TIMEOUT
+                    )
+                    logger.info(f"Cancelled old job {old_job_id}")
+                except Exception as e:
+                    logger.error(f"Error cancelling old job: {str(e)}")
+            return handle_question(event)
+        else:
+            # Any other intent while job is running = poll
+            return handle_polling(event)
+
+    # Handle new question intent
     elif intent_name == 'AskQuestionIntent':
         return handle_question(event)
-
-    # Handle polling (when session has active job_id)
-    elif 'job_id' in session:
-        return handle_polling(event)
 
     else:
         return build_response(
@@ -336,8 +354,10 @@ def extract_question(event: Dict[str, Any]) -> Optional[str]:
         intent = event['request']['intent']
         slots = intent.get('slots', {})
 
-        # Try to get question from slot
-        if 'Question' in slots and slots['Question'].get('value'):
+        # Try to get question from slot (check both lowercase and uppercase)
+        if 'question' in slots and slots['question'].get('value'):
+            return slots['question']['value']
+        elif 'Question' in slots and slots['Question'].get('value'):
             return slots['Question']['value']
 
         # Fallback: try to reconstruct from raw text
